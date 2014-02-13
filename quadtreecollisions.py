@@ -2,7 +2,7 @@ import pygame, sys
 import random
 from pygame.locals import *
 from rui.rui import World
-from systems import MovementSystem, QuadTreeCollisionSystem, CollisionSystem, RenderSystem
+from systems import MovementSystem, QuadTreeCollisionSystem, ImpQuadTreeCollisionSystem, CollisionSystem, RenderSystem
 from components import Position, Velocity, Bounds, Color
 
 pygame.init()
@@ -10,6 +10,7 @@ pygame.init()
 WIDTH = 600
 HEIGHT = 600
 QUADTREE = True
+IMPROVED = True
 
 window = pygame.display.set_mode((WIDTH, HEIGHT))
 fps_clock = pygame.time.Clock()
@@ -20,9 +21,13 @@ world = World()
 
 world.add_system(MovementSystem(WIDTH, HEIGHT))
 if QUADTREE:
-    world.add_system(QuadTreeCollisionSystem(WIDTH, HEIGHT))
+    if IMPROVED:
+        world.add_system(ImpQuadTreeCollisionSystem(WIDTH, HEIGHT))
+    else:
+        world.add_system(QuadTreeCollisionSystem(WIDTH, HEIGHT))
 else:
     world.add_system(CollisionSystem())
+
 
 world.add_system(RenderSystem(window))
 
@@ -34,11 +39,11 @@ def create_thing():
     thing = world.create_entity()
     thing.add_component(Position(px,py))
     thing.add_component(Velocity(vx,vy))
-    thing.add_component(Bounds(10,10))
+    thing.add_component(Bounds(10, 10))
     thing.add_component(Color(pygame.Color(0,0,255)))
     return thing
 
-for _ in range(0, 100):
+for _ in range(0, 200):
     world.add_entity(create_thing())
 
 while True:

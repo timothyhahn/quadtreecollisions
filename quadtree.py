@@ -15,8 +15,8 @@ class Quadtree:
         self.level = level
         self.bounds = bounds
 
-        self.MAX_OBJECTS = 8
-        self.MAX_LEVELS = 10
+        self.MAX_OBJECTS = 20
+        self.MAX_LEVELS = 8
         self.objects = []
         self.nodes = [None] * 4
     
@@ -114,5 +114,15 @@ class Quadtree:
             return_objects = self.nodes[index].retrieve(entity)
 
         return_objects = return_objects + self.objects
+        return return_objects
+
+    def retrieve_quadrants(self):
+        return_objects = []
+        if len(self.objects) > 0:
+            return_objects.append(self.objects)
+        for node in self.nodes:
+            if node:
+                return_objects += node.retrieve_quadrants()
+
         return return_objects
 

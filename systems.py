@@ -17,20 +17,20 @@ class MovementSystem(System):
         for entity in entities:
             position = entity.get_component(Position)
             velocity = entity.get_component(Velocity)
-            if position.x < 0 or position.x > self.width:
+            if position.x <= 0 or position.x >= self.width:
                 if position.x < 0:
-                    position.x = 1
+                    position.x = 10
                 else:
-                    position.x = self.width - 1
+                    position.x = self.width - 10
                 velocity.x = -velocity.x
 
-            if position.y < 0 or position.y > self.height:
+            if position.y <= 0 or position.y >= self.height:
                 if position.y < 0:
-                    position.y = 1
+                    position.y = 10
                 else:
-                    position.y = self.height - 1
+                    position.y = self.height - 10
                 velocity.y = -velocity.y
-
+            velocity.y += 1
             position.x += velocity.x * delta
             position.y += velocity.y * delta
 
@@ -64,7 +64,7 @@ class QuadTreeCollisionSystem(System):
         self.quad.clear()
 
         for entity in entities:
-            self.quad.insert2(entity)
+            self.quad.insert(entity)
 
         for entity in entities:
             return_objects = []
@@ -72,16 +72,54 @@ class QuadTreeCollisionSystem(System):
             for against in return_objects:
                 if entity != against:
                     if does_collide(entity, against):
-                        entity.get_component(Color).color = pygame.Color(150, 0, 0)
+                        entity.get_component(Color).color = pygame.Color(150, 0, 155)
         
         elapsed = datetime.now() - start
         self.counter += 1
         self.time_passed_total += elapsed.microseconds
 
         if self.counter % 10 == 0:
-#            print 'collisions take on average %s milliseconds' % (self.time_passed_total / self.counter / 1000)
+            print 'collisions take on average %s milliseconds' % (self.time_passed_total / self.counter / 1000)
             for entity in entities:
                 entity.get_component(Color).color = pygame.Color(0,0,255)
+
+class ImpQuadTreeCollisionSystem(System):
+    def __init__(self, width, height):
+        self.quad = Quadtree(0, Rectangle(0,0,width, height))
+        self.counter = 0
+        self.time_passed_total = 0
+        
+    def process(self, delta):
+        start = datetime.now()
+        entities = self.world.get_entities_by_components(Position, Bounds)
+
+        self.quad.clear()
+
+        for entity in entities:
+            self.quad.insert2(entity)
+
+        quads = self.quad.retrieve_quadrants()
+
+        counter = 0
+        for quad in quads:
+            counter += len(quad)
+            while len(quad) > 1:
+                head, rest = quad[0], quad[1:]
+                for against in rest:
+                    if does_collide(head, against):
+                        head.get_component(Color).color = pygame.Color(150, 0, 0)
+                        against.get_component(Color).color = pygame.Color(150, 0, 0)
+                quad = rest
+        
+        elapsed = datetime.now() - start
+        self.counter += 1
+        self.time_passed_total += elapsed.microseconds
+
+        if self.counter % 50 == 0:
+            print 'collisions take on average %s milliseconds' % (self.time_passed_total / self.counter / 1000)
+            for entity in entities:
+                entity.get_component(Color).color = pygame.Color(0,0,255)
+
 
 
 class CollisionSystem(System):
@@ -96,7 +134,7 @@ class CollisionSystem(System):
             for against in entities:
                 if entity is not against:
                     if does_collide(entity, against):
-                        entity.get_component(Color).color = pygame.Color(150, 0, 0)
+                        entity.get_component(Color).color = pygame.Color(0, 150, 150)
         elapsed = datetime.now() - start
         self.counter += 1
         self.time_passed_total += elapsed.microseconds
